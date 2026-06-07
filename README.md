@@ -1,8 +1,8 @@
-# hft-bt — hft backtester with hardware acceleration
+# hftBT - hft backtester with hardware acceleration
 
 an ultra-low-latency high-frequency trading backtester built around a
-cache-friendly limit order book in c++20, with a simuuated fpga feature-extraction
-pipeline described in systemverilog and bridged to the software engine over a
+cache-friendly limit order book in c++20, with a simulated fpga feature-extraction
+pipeline described in systemverilog & bridged to the software engine over a
 modelled axi-stream / pcie interface.
 
 ## architecture
@@ -97,7 +97,7 @@ phase 1 implements an l3 (per-order) book optimised for the hot path:
   per-level fifo queues with intrusive 32-bit links, preserving time priority.
 - **order-id → slot lookup** is an open-addressing flat map; cancels and
   executes are O(1).
-- **best bid/ask are cached indices**, re-scanned over contiguous memory only
+- **best bid/ask are cached indices**, rescanned over contiguous memory only
   when a top level empties.
 - **zero heap allocation, no locks and no exceptions on add / cancel / execute.**
 
@@ -110,7 +110,7 @@ phase 4 fpga engine will compute in hardware.
 phase 2 turns a raw binary market-data stream into book mutations:
 
 - **wire protocol** — an itch-like binary format: a 2-byte big-endian length
-  prefix per frame, then a fixed-width big-endian message body (add / execute /
+  prefix per frame, then a fixed width big-endian message body (add / execute /
   cancel / delete / replace / trade). packed structs pin the on-wire sizes.
 - **zero-copy parser** — `frame_cursor` walks the buffer handing back body
   pointers without copying; `decode` reads fields with `load_be` straight into a
@@ -122,7 +122,7 @@ phase 2 turns a raw binary market-data stream into book mutations:
   and the engine thread.
 - **feed handler** — drives bytes → events → a sink (a vector in tests, the ring
   in the live path), tracking parsed / malformed / consumed counters.
-- **synthetic generator** — produces a deterministic, internally-consistent itch
+- **synthetic generator** — produces a deterministic, internally consistent itch
   stream and reports the exact resting-order count the book must hold after
   replay, which the integration test asserts against.
 
