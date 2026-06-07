@@ -1,0 +1,34 @@
+# build output
+build/
+out/
+cmake-build-*/
+
+# compiler / tooling artefacts
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.exe
+compile_commands.json
+.cache/
+
+# hardware simulation artefacts
+*.vcd
+*.fst
+*.vvp
+work/
+xsim.dir/
+*.jou
+*.log
+*.wdb
+
+# editor
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# captured market data (keep the directory, not its contents)
+data/*
+!data/.gitkeep
