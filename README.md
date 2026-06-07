@@ -1,6 +1,6 @@
 # chronosBT - hft backtester with hardware acceleration
 
-an ultra-low-latency high-frequency trading backtester built around a
+an ultra low latency high-frequency trading backtester built around a
 cache-friendly limit order book in c++20, with a simulated fpga feature-extraction
 pipeline described in systemverilog & bridged to the software engine over a
 modelled axi-stream / pcie interface.
