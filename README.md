@@ -1,4 +1,4 @@
-# hftBT - hft backtester with hardware acceleration
+# chronosBT - hft backtester with hardware acceleration
 
 an ultra-low-latency high-frequency trading backtester built around a
 cache-friendly limit order book in c++20, with a simulated fpga feature-extraction

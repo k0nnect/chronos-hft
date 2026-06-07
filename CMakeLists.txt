@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(hft-bt
+project(chronos-bt
   VERSION 0.1.0
   DESCRIPTION "hardware-accelerated high-frequency trading backtester"
   LANGUAGES CXX)
