@@ -9,6 +9,11 @@ modelled axi-stream / pcie interface.
 
 ```mermaid
 flowchart LR
+    %% ── watermark ───────────────────────────────
+    BRAND["<b>⏱ chronos-bt</b><br/>hardware-accelerated hft backtester<br/>— c. jagdeo —<br/>github.com/k0nnect/chronos-bt"]
+    click BRAND href "https://github.com/k0nnect/chronos-bt" "chronos-bt · c. jagdeo" _blank
+    BRAND ~~~ feed
+
     subgraph feed["phase 2 · feed pipeline"]
         direction TB
         GEN["synthetic generator<br/>(itch-like wire bytes)"]
@@ -49,6 +54,10 @@ flowchart LR
     STRAT -->|orders via gateway| FILL
     BOOK ==>|book-update beat| AXI
     REF -.->|features ≈ order_book| ANALYTICS
+
+    %% ── styling ─────────────────────────────────────────
+    classDef brand fill:#0d1117,stroke:#1f6feb,stroke-width:1.5px,color:#e6edf3;
+    class BRAND brand;
 ```
 
 ## status
