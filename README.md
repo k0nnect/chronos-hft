@@ -1,9 +1,55 @@
 # hft-bt — hft backtester with hardware acceleration
 
 an ultra-low-latency high-frequency trading backtester built around a
-cache-friendly limit order book in c++20, with a simulated fpga feature-extraction
+cache-friendly limit order book in c++20, with a simuuated fpga feature-extraction
 pipeline described in systemverilog and bridged to the software engine over a
 modelled axi-stream / pcie interface.
+
+## architecture
+
+```mermaid
+flowchart LR
+    subgraph feed["phase 2 · feed pipeline"]
+        direction TB
+        GEN["synthetic generator<br/>(itch-like wire bytes)"]
+        PARSE["zero-copy parser<br/>frame_cursor · decode"]
+        RING["lock-free spsc ring<br/>(feed thread → engine thread)"]
+        GEN --> PARSE --> RING
+    end
+
+    subgraph book["phase 1 · l3 order book"]
+        direction TB
+        BOOK["flat tick-indexed levels<br/>intrusive fifo queues · O(1) id map"]
+        ANALYTICS["spread · mid · micro-price<br/>order-flow imbalance"]
+        BOOK --> ANALYTICS
+    end
+
+    subgraph engine["phase 3 · backtest engine"]
+        direction TB
+        APPLY["apply event<br/>+ queue-consumption signal"]
+        FILL["queue-aware fill model<br/>latency · partials · fees"]
+        STRAT["crtp strategy<br/>(micro-price market maker)"]
+        METRICS["metrics<br/>p&l · drawdown · sharpe"]
+        APPLY --> FILL --> STRAT
+        FILL --> METRICS
+    end
+
+    subgraph hw["phase 4 · fpga accelerator (verilator cosim)"]
+        direction TB
+        AXI["axi4-stream bridge<br/>128b in / 64b out"]
+        RTL["feature_extractor.sv<br/>frac divider · micro-price · imbalance"]
+        REF["bit-exact reference<br/>(golden Q16.16 model)"]
+        AXI --> RTL
+        RTL -.->|rtl == reference| REF
+    end
+
+    RING -->|market_event| APPLY
+    APPLY -->|book mutations| BOOK
+    BOOK -->|top-of-book snapshot| STRAT
+    STRAT -->|orders via gateway| FILL
+    BOOK ==>|book-update beat| AXI
+    REF -.->|features ≈ order_book| ANALYTICS
+```
 
 ## status
 
