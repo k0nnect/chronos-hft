@@ -227,4 +227,4 @@ ctest --test-dir build --output-on-failure
 `scripts/build.sh` wraps the same steps.
 
 release builds compile with `-O3 -march=native -mtune=native`, link-time
-optimisation, and aggressive scalar/vector flags (see `cmake/compilerflags.cmake`).
+optimization, and aggressive scalar/vector flags (see `cmake/compilerflags.cmake`).
