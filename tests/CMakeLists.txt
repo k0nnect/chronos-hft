@@ -24,6 +24,7 @@ hft_add_test(test_feed_integration)
 # phase 3
 hft_add_test(test_engine)
 hft_add_test(test_market_impact)
+hft_add_test(test_trace_logger)
 
 # phase 5 -- offline pcap replay (links the mmap reader implementation).
 hft_add_test(test_pcap hft_feed)

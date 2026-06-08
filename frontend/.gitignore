@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vite
+
+# editor / os cruft
+.DS_Store
+*.log

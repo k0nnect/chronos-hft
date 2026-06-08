@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  @apply bg-zinc-950 text-zinc-200 font-mono antialiased;
+}
+
+/* thin dark scrollbars so the ticker & panels stay on-theme. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a #0a0a0a;
+}
+*::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 4px;
+}

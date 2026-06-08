@@ -26,6 +26,7 @@
 #include "hft/engine/metrics.hpp"
 #include "hft/engine/strategy.hpp"
 #include "hft/feed/market_event.hpp"
+#include "hft/metrics/trace_logger.hpp"
 
 namespace hft {
 
@@ -42,6 +43,11 @@ public:
 
     backtest_engine(const backtest_engine&)            = delete;
     backtest_engine& operator=(const backtest_engine&) = delete;
+
+    // attach (or detach, with nullptr) a jsonl trace logger. optional: when set,
+    // the engine asks it to emit a snapshot every event; the logger throttles to
+    // its configured interval. nothing else about the hot path changes.
+    void attach_trace_logger(trace_logger<>* logger) noexcept { logger_ = logger; }
 
     // process exactly one market event end to end.
     hft_hot void on_event(const market_event& ev) noexcept {
@@ -66,6 +72,11 @@ public:
 
         // newly staged orders become live from this timestamp onward.
         drain_intents(now);
+
+        // optional trace: the logger decides (by its interval) whether to emit.
+        if (logger_ != nullptr) [[unlikely]] {
+            logger_->on_tick(now, *book_, metrics_->position(), metrics_->realized_pnl());
+        }
         ++events_;
     }
 
@@ -168,6 +179,7 @@ private:
     Strategy*       strat_;
     fill_model_t*   fm_;
     metrics_engine* metrics_;
+    trace_logger<>* logger_ = nullptr;  // optional jsonl trace sink
     order_gateway   gw_;
     std::uint64_t   events_ = 0;
 };

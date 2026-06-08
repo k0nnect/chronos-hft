@@ -18,6 +18,7 @@
 #include "hft/feed/feed_handler.hpp"
 #include "hft/feed/itch_generator.hpp"
 #include "hft/feed/spsc_ring.hpp"
+#include "hft/metrics/trace_logger.hpp"
 #include "hft/strategies/micro_price_mm.hpp"
 
 using namespace hft;
@@ -51,6 +52,19 @@ int main() {
                                                 /*lean_threshold=*/0.6});
 
     backtest_engine<book_t, micro_price_mm, 256> engine(*book, strat, fm, metrics);
+
+    // dump a jsonl trace for the replay dashboard. the synthetic generator stamps
+    // one nanosecond per message, so the production 100 ms cadence would yield
+    // almost nothing here; sample every 4000 ticks to get a few hundred frames.
+    // a real capture carries true wall-clock ns, where default_trace_interval_ns
+    // (100 ms) is the right cadence.
+    trace_logger<> tracer;
+    const char* const trace_path = "trace.jsonl";
+    const bool tracing = tracer.open(trace_path);
+    if (tracing) {
+        tracer.set_interval(4000);
+        engine.attach_trace_logger(&tracer);
+    }
 
     using clock = std::chrono::steady_clock;
     const auto t0 = clock::now();
@@ -95,5 +109,13 @@ int main() {
     std::printf("  fees paid        : %.2f (negative = net rebate)\n", metrics.fees());
     std::printf("  max drawdown     : %.2f\n", metrics.max_drawdown());
     std::printf("  per-tick sharpe  : %.4f\n", metrics.sharpe());
+
+    if (tracing) {
+        const std::uint64_t frames = tracer.lines();
+        tracer.close();  // flush
+        std::printf("  ---- replay trace ----\n");
+        std::printf("  wrote %s: %llu frames (load it in the dashboard)\n", trace_path,
+                    static_cast<unsigned long long>(frames));
+    }
     return 0;
 }
