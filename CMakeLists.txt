@@ -30,6 +30,11 @@ target_link_libraries(hft_core INTERFACE hft_flags)
 
 find_package(Threads REQUIRED)
 
+# phase 5: offline pcap replay. the mmap setup/teardown lives in a small compiled
+# unit (the headers stay free of <sys/mman.h>); everything hot-path is header-only.
+add_library(hft_feed STATIC src/feed/pcap_reader.cpp)
+target_link_libraries(hft_feed PUBLIC hft_core)
+
 # phase 1 demo / benchmark driver.
 add_executable(hft_demo src/main.cpp)
 target_link_libraries(hft_demo PRIVATE hft_core)

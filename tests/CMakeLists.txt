@@ -6,7 +6,8 @@ find_package(Threads REQUIRED)
 
 function(hft_add_test name)
   add_executable(${name} ${name}.cpp)
-  target_link_libraries(${name} PRIVATE hft_core Threads::Threads)
+  # any extra args are additional libraries this test links against.
+  target_link_libraries(${name} PRIVATE hft_core Threads::Threads ${ARGN})
   add_test(NAME ${name} COMMAND ${name})
 endfunction()
 
@@ -23,6 +24,9 @@ hft_add_test(test_feed_integration)
 # phase 3
 hft_add_test(test_engine)
 hft_add_test(test_market_impact)
+
+# phase 5 -- offline pcap replay (links the mmap reader implementation).
+hft_add_test(test_pcap hft_feed)
 
 # phase 4 -- the fixed-point feature reference the rtl mirrors (no verilator
 # needed; the verilated cosim cross-check lives behind HFT_BUILD_HARDWARE).
