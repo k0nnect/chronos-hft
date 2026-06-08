@@ -153,6 +153,26 @@ private:
         u.mid         = book_->mid();
         u.micro_price = book_->micro_price();
         u.imbalance   = book_->imbalance(1);
+
+        // fill the top-`book_update_depth` levels of each side, inside-out. the
+        // walk visits at most that many populated levels, so the counters never
+        // exceed the fixed arrays.
+        u.bid_levels = 0;
+        u.ask_levels = 0;
+        book_->walk(side::bid, book_update_depth, [&u](price_t px, qty_t q) noexcept -> bool {
+            const std::size_t i = u.bid_levels;
+            u.bid_px[i]  = px;
+            u.bid_sz[i]  = q;
+            u.bid_levels = static_cast<std::uint8_t>(i + 1);
+            return true;
+        });
+        book_->walk(side::ask, book_update_depth, [&u](price_t px, qty_t q) noexcept -> bool {
+            const std::size_t i = u.ask_levels;
+            u.ask_px[i]  = px;
+            u.ask_sz[i]  = q;
+            u.ask_levels = static_cast<std::uint8_t>(i + 1);
+            return true;
+        });
         return u;
     }
 

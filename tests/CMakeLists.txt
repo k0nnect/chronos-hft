@@ -29,6 +29,10 @@ hft_add_test(test_trace_logger)
 # phase 5 -- offline pcap replay (links the mmap reader implementation).
 hft_add_test(test_pcap hft_feed)
 
+# phase 6 -- statistical maker: alpha engine (header-only) & the quoting strategy.
+hft_add_test(test_alpha_engine)
+hft_add_test(test_statistical_mm hft_stat_mm)
+
 # phase 4 -- the fixed-point feature reference the rtl mirrors (no verilator
 # needed; the verilated cosim cross-check lives behind HFT_BUILD_HARDWARE).
 hft_add_test(test_feature_golden)

@@ -17,9 +17,11 @@ flowchart LR
     subgraph feed["phase 2 · feed pipeline"]
         direction TB
         GEN["synthetic generator<br/>(itch-like wire bytes)"]
+        PCAP["offline pcap reader (phase 5)<br/>mmap · eth → ip → udp (zero-copy)"]
         PARSE["zero-copy parser<br/>frame_cursor · decode"]
         RING["lock-free spsc ring<br/>(feed thread → engine thread)"]
         GEN --> PARSE --> RING
+        PCAP --> PARSE
     end
 
     subgraph book["phase 1 · l3 order book"]
@@ -33,9 +35,11 @@ flowchart LR
         direction TB
         APPLY["apply event<br/>+ queue-consumption signal"]
         FILL["queue-aware fill model<br/>latency · partials · fees<br/>+ market impact (temp · perm · adverse selection)"]
-        STRAT["crtp strategy<br/>(micro-price market maker)"]
+        ALPHA["alpha engine (phase 6)<br/>q.16 multi-level obi · kalman filter"]
+        STRAT["crtp strategies<br/>micro-price · statistical mm"]
         METRICS["metrics<br/>p&l · drawdown · sharpe"]
         APPLY --> FILL --> STRAT
+        ALPHA --> STRAT
         FILL --> METRICS
     end
 
@@ -48,10 +52,19 @@ flowchart LR
         RTL -.->|rtl == reference| REF
     end
 
+    subgraph viz["phase 5 · replay dashboard"]
+        direction TB
+        TRACE["jsonl trace logger<br/>book · pnl · alpha state"]
+        DASH["react / vite dashboard<br/>depth · pnl · ticker · playback"]
+        TRACE --> DASH
+    end
+
     RING -->|market_event| APPLY
     APPLY -->|book mutations| BOOK
     BOOK -->|top-of-book snapshot| STRAT
+    BOOK -->|multi-level snapshot| ALPHA
     STRAT -->|orders via gateway| FILL
+    METRICS -->|per-tick snapshot| TRACE
     BOOK ==>|book-update beat| AXI
     REF -.->|features ≈ order_book| ANALYTICS
 
@@ -68,6 +81,8 @@ flowchart LR
 | 2 | binary feed handler (itch-like) + spsc ring buffer | done |
 | 3 | backtest engine, strategy api, fill simulation + market impact | done |
 | 4 | systemverilog feature engine + verilator cosim bridge | done |
+| 5 | offline pcap replay + jsonl trace + react/vite replay dashboard | done |
+| 6 | statistical maker: q.16 alpha engine + inventory-aware quoting | done |
 
 ## layout
 
@@ -77,21 +92,23 @@ include/hft/        public headers (header-only core)
                     byte-order helpers, memory pool
   book/             price level, order-id index map, l3 order book, event apply
   feed/             wire protocol, zero-copy parser, spsc ring, feed handler,
-                    synthetic market generator
-  engine/           book-update snapshot, crtp strategy + order gateway,
-                    queue-aware fill model, fixed-point market-impact model,
-                    metrics, backtest engine
-  strategies/       sample strategies (micro-price market maker)
+                    synthetic market generator, pcap structures + mmap reader
+  engine/           multi-level book-update snapshot, crtp strategy + order
+                    gateway, queue-aware fill model, fixed-point market-impact
+                    model, metrics, backtest engine
+  signals/          q.16 alpha engine (multi-level obi + constant-gain filter)
+  strategies/       micro-price maker, statistical (alpha + inventory) maker
+  metrics/          jsonl trace logger + strategy trace-extras
 hardware/           systemverilog accelerator + verilator cosim
   rtl/              frac divider, micro-price, volume-imbalance, feature_extractor,
                     axi-stream interface
   dpi/              fixed-point reference + verilated-model c++ wrapper
   tb/               systemverilog testbench + c++ cosim cross-check
-src/                executables / translation units
-hardware/           (phase 4) systemverilog rtl, testbenches, dpi bridge
-  rtl/  tb/  dpi/
+src/                executables / translation units (drivers, pcap reader,
+                    statistical-maker library)
 tests/              assert-based unit tests (no external framework)
 bench/              standalone micro-benchmarks
+frontend/           vite + react + typescript replay dashboard (tailwind, recharts)
 cmake/              shared compiler/optimisation flags
 scripts/            build helpers
 data/               captured / synthetic market data
@@ -203,6 +220,85 @@ pins the fixed-point primitives and proves, against the idealized baseline the s
 code path produces with impact off, that large executions move realized prices,
 decay the mid, degrade passive fills, and lower marked p&l.
 
+## the statistical market maker
+
+phase 6 replaces the micro-price maker with a depth-aware, inventory-managed
+strategy that reads multi-level book structure & smooths it before it quotes.
+everything on the hot path is integer Q.16 fixed point with zero heap allocation;
+doubles appear only at configure time.
+
+- **alpha engine** (`signals/alpha_engine.hpp`) — two pieces. first a
+  volume-weighted **order-book imbalance** over the top 5 levels of each side, with
+  a linear taper `{5,4,3,2,1}` so flow near the touch (the most predictive) weighs
+  most; the result is signed & bounded to `[-1,1]`. second a **constant-gain
+  alpha-beta filter** — the steady-state form of a kalman filter that tracks a
+  level & a velocity with fixed gains, denoising the tick-to-tick obi into a stable
+  alpha with two state words, two multiplies & two adds per update (no history, no
+  allocation). the multi-level depth it needs rides along on the engine's
+  `book_update` snapshot, so the strategy never re-walks the book.
+- **quoting** (`strategies/statistical_mm.hpp`) — from the filtered alpha & its own
+  inventory the maker derives two integer controls. **skew** shifts the quote
+  center: lean *with* the predicted move (alpha) to earn the drift, lean *against*
+  inventory to mean-revert position risk back toward flat. **width** widens the
+  half-spread when `|alpha|` or `|inventory|` is large — strong alpha means the
+  resting side is about to be adversely selected (exactly the toxicity the
+  market-impact module models as permanent skew + queue degradation), so the maker
+  demands more edge before resting there. it never quotes tighter than the touch
+  (a tighter computed price joins the inside; widening steps it out behind the
+  touch), & a hard position cap stops it quoting a side that would breach the limit.
+- **drivers & tests** — `test_alpha_engine` pins the obi (sign, bounds,
+  near-level dominance) & the filter (priming, steady state, monotone tracking);
+  `test_statistical_mm` checks it quotes an uncrossed book, respects the inventory
+  cap, & skews its center with the alpha. run the full pcap-fed backtest with
+  `./build/stat_mm` (see below).
+
+## offline pcap replay
+
+phase 5 lets the engine consume real captured multicast feeds instead of only the
+synthetic generator. `feed/pcap_reader.hpp` memory-maps a `.pcap` trace once
+(`PcapReader`, the only translation unit that touches `<sys/mman.h>`) & exposes a
+**zero-copy frame cursor** that peels ethernet → ipv4 → udp off each record &
+hands the raw udp payload — our itch-like stream — straight to the existing
+`itch::decode`, no copy & no allocation. the cursor advances by exactly the byte
+length each pcap record header declares, so a non-udp or truncated record is
+skipped cleanly rather than walking off the mapping. `feed/pcap_structures.hpp`
+pins every framing layout with `static_assert`s on its wire size.
+
+```sh
+./build/stat_mm                 # synthesizes a pcap, replays it through the maker
+./build/stat_mm capture.pcap    # or replay a real ethernet/ipv4/udp itch capture
+```
+
+with no argument the driver builds a deterministic capture (wrapping a synthetic
+itch stream in real eth/ip/udp framing), replays it, & writes `stat_trace.jsonl`.
+`test_pcap` exercises the same path against a hand-built mock savefile, including
+ipv4 options, skipped arp/tcp records & a truncated tail.
+
+## the replay dashboard
+
+phase 5 also ships a visual replay dashboard under `frontend/` — vite + react +
+typescript, tailwind dark theme. the c++ side streams an append-only **jsonl
+trace** (`metrics/trace_logger.hpp`): one allocation-free line per logging
+interval carrying best bid/ask, the top-5 book levels, position & realized p&l,
+plus an optional `"a"` object with the statistical maker's alpha / obi / skew /
+inventory state. the dashboard loads that file & replays it frame by frame:
+
+- a cumulative **depth ladder** over the top 5 bid/ask levels,
+- a realized **p&l curve** (recharts),
+- a scrolling **execution ticker** (prints derived from position deltas),
+- a **playback controller** (play / pause / speed / scrub) over the trace,
+- a live **obi / alpha** readout when the trace carries strategy state.
+
+```sh
+cd build && ./micro_price_mm   # writes ./build/trace.jsonl, or
+./build/stat_mm                # writes ./build/stat_trace.jsonl (with alpha state)
+
+cd frontend && npm install && npm run dev    # http://localhost:5173
+```
+
+upload a `.jsonl` trace with **upload jsonl**, or hit **load sample** for the
+bundled capture. nothing is uploaded anywhere — parsing is entirely client-side.
+
 ## the hardware accelerator
 
 phase 4 offloads feature extraction (micro-price + volume imbalance) to a
@@ -261,7 +357,9 @@ ctest --test-dir build --output-on-failure
 ./build/hft_demo
 ```
 
-`scripts/build.sh` wraps the same steps.
+`scripts/build.sh` wraps the same steps. the build produces four drivers —
+`hft_demo` (book demo + micro-benchmark), `micro_price_mm` & `stat_mm` (full
+backtests), plus the `bench_feed` micro-benchmark — alongside the unit-test suite.
 
 release builds compile with `-O3 -march=native -mtune=native`, link-time
 optimization, and aggressive scalar/vector flags (see `cmake/compilerflags.cmake`).

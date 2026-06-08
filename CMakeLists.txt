@@ -35,6 +35,11 @@ find_package(Threads REQUIRED)
 add_library(hft_feed STATIC src/feed/pcap_reader.cpp)
 target_link_libraries(hft_feed PUBLIC hft_core)
 
+# phase 6: statistical market maker. the cold double -> Q.16 configuration is
+# compiled here; the alpha engine & quoting hot path are header-only.
+add_library(hft_stat_mm STATIC src/strategies/statistical_mm.cpp)
+target_link_libraries(hft_stat_mm PUBLIC hft_core)
+
 # phase 1 demo / benchmark driver.
 add_executable(hft_demo src/main.cpp)
 target_link_libraries(hft_demo PRIVATE hft_core)
@@ -42,6 +47,10 @@ target_link_libraries(hft_demo PRIVATE hft_core)
 # phase 3 backtest driver: the micro-price market maker over the full pipeline.
 add_executable(micro_price_mm src/strategies/micro_price_mm.cpp)
 target_link_libraries(micro_price_mm PRIVATE hft_core Threads::Threads)
+
+# phase 6 driver: replay an offline pcap capture through the statistical maker.
+add_executable(stat_mm src/main_stat_mm.cpp)
+target_link_libraries(stat_mm PRIVATE hft_core hft_feed hft_stat_mm)
 
 enable_testing()
 add_subdirectory(tests)

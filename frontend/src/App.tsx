@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { derivePrints, type Frame } from './types'
+import { derivePrints, type AlphaState, type Frame } from './types'
 import { usePlayback } from './hooks/usePlayback'
 import { DepthChart } from './components/DepthChart'
 import { PnlChart, type PnlPoint } from './components/PnlChart'
@@ -40,7 +40,7 @@ export default function App() {
           {fileName && <span className="text-xs text-zinc-600">{fileName}</span>}
         </div>
         <div className="flex items-center gap-4">
-          {loaded && frame && <LiveStats pnl={frame.pnl} pos={frame.pos} />}
+          {loaded && frame && <LiveStats pnl={frame.pnl} pos={frame.pos} alpha={frame.a} />}
           <FileLoader onFrames={load} />
         </div>
       </header>
@@ -63,9 +63,15 @@ export default function App() {
   )
 }
 
-function LiveStats({ pnl, pos }: { pnl: number; pos: number }) {
+function LiveStats({ pnl, pos, alpha }: { pnl: number; pos: number; alpha?: AlphaState }) {
   return (
     <div className="flex items-center gap-4 text-sm tabular-nums">
+      {alpha && (
+        <>
+          <Stat label="obi" value={alpha.obi.toFixed(3)} tone={alpha.obi} />
+          <Stat label="alpha" value={alpha.alpha.toFixed(3)} tone={alpha.alpha} />
+        </>
+      )}
       <div className="flex flex-col items-end">
         <span className="text-[10px] uppercase tracking-wider text-zinc-500">pnl</span>
         <span className={pnl >= 0 ? 'text-bid' : 'text-ask'}>{fmtPnl(pnl)}</span>
@@ -76,6 +82,15 @@ function LiveStats({ pnl, pos }: { pnl: number; pos: number }) {
           {pos > 0 ? `+${fmtInt(pos)}` : fmtInt(pos)}
         </span>
       </div>
+    </div>
+  )
+}
+
+function Stat({ label, value, tone }: { label: string; value: string; tone: number }) {
+  return (
+    <div className="flex flex-col items-end">
+      <span className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</span>
+      <span className={tone > 0 ? 'text-bid' : tone < 0 ? 'text-ask' : 'text-zinc-300'}>{value}</span>
     </div>
   )
 }

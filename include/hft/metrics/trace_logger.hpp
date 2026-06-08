@@ -21,6 +21,7 @@
 
 #include "hft/core/compiler.hpp"
 #include "hft/core/types.hpp"
+#include "hft/metrics/trace_extras.hpp"
 
 namespace hft {
 
@@ -67,6 +68,11 @@ public:
         interval_ns_ = interval_ns != 0 ? interval_ns : 1;
     }
 
+    // borrow a strategy's signal block; while attached & `present`, every snapshot
+    // gains an "a" object carrying the alpha / risk state. pass nullptr to detach.
+    // the pointee must outlive the logger's use of it (the engine owns both).
+    void attach_extras(const trace_extras* extras) noexcept { extras_ = extras; }
+
     // engine hook, called every event. emits at most one snapshot per call, when
     // `now` reaches the next interval boundary. a no-op (one branch) when closed.
     template <typename Book>
@@ -105,6 +111,18 @@ public:
         sep(); key("asks"); levels(book, side::ask);
         sep(); key("pos");  i64(position);
         sep(); key("pnl");  dbl(realized_pnl);
+        if (extras_ != nullptr && extras_->present) {
+            sep();
+            key("a");
+            put('{');
+            key("obi");          dbl(extras_->obi);
+            sep(); key("alpha"); dbl(extras_->alpha);
+            sep(); key("vel");   dbl(extras_->velocity);
+            sep(); key("hs");    dbl(extras_->half_spread);
+            sep(); key("skew");  dbl(extras_->skew);
+            sep(); key("inv");   dbl(extras_->inventory);
+            put('}');
+        }
         put('}');
         put('\n');
         std::fwrite(buf_, 1, len_, fp_);
@@ -190,13 +208,14 @@ private:
         put(']');
     }
 
-    std::FILE*    fp_          = nullptr;
-    ts_t          interval_ns_ = default_trace_interval_ns;
-    ts_t          next_ts_     = 0;
-    bool          armed_       = false;
-    std::uint64_t lines_       = 0;
-    std::size_t   len_         = 0;
-    char          buf_[BufBytes];
+    std::FILE*          fp_          = nullptr;
+    const trace_extras* extras_      = nullptr;  // borrowed strategy signal block
+    ts_t                interval_ns_ = default_trace_interval_ns;
+    ts_t                next_ts_     = 0;
+    bool                armed_       = false;
+    std::uint64_t       lines_       = 0;
+    std::size_t         len_         = 0;
+    char                buf_[BufBytes];
 };
 
 }  // namespace hft

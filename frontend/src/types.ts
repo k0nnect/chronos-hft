@@ -1,6 +1,17 @@
 // the shape of one jsonl frame emitted by the c++ trace_logger, plus the helpers
 // that parse a whole file & derive execution prints from it.
 
+// optional alpha / risk state a statistical strategy attaches to each frame
+// (the trace_logger's "a" object). absent for strategies that do not emit it.
+export interface AlphaState {
+  obi: number // raw volume-weighted order-book imbalance [-1,1]
+  alpha: number // filtered alpha (constant-gain kalman level)
+  vel: number // alpha tracking velocity
+  hs: number // current quoting half-width (ticks)
+  skew: number // current center skew (ticks)
+  inv: number // inventory ratio [-1,1]
+}
+
 export interface Frame {
   t: number // simulation timestamp (nanoseconds for real captures)
   bb: number | null // best bid price in ticks (null when the bid side is empty)
@@ -9,6 +20,7 @@ export interface Frame {
   asks: [number, number][]
   pos: number // signed position in shares
   pnl: number // realized p&l
+  a?: AlphaState // present only when the strategy emits alpha state
 }
 
 // a synthetic execution print, derived from a position change between two frames.
