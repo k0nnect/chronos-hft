@@ -1,10 +1,10 @@
 // end-to-end: generate a synthetic itch stream, run it through the feed handler
 // into the spsc ring on a producer thread, drain it on a consumer thread that
-// replays each event into the order book, and verify the book's resting-order
+// replays each event into the order book, & verify the book's resting-order
 // count matches the generator's independently-computed ground truth.
 //
-// also runs the simpler single-threaded path (handler -> vector -> book) and a
-// direct ring_sink push so each layer is covered both in isolation and together.
+// also runs the simpler single-threaded path (handler -> vector -> book) & a
+// direct ring_sink push so each layer is covered both in isolation & together.
 #include <cstdint>
 #include <memory>
 #include <thread>
@@ -54,14 +54,14 @@ void threaded_handler_ring_book() {
     auto book = std::make_unique<book_t>(feed.base_tick);
     auto ring = std::make_unique<spsc_ring<market_event, 4096>>();
 
-    // producer: parse the wire stream and publish every event into the ring.
+    // producer: parse the wire stream & publish every event into the ring.
     feed_handler handler;
     std::thread producer([&] {
         ring_sink<spsc_ring<market_event, 4096>> sink(*ring);
         handler.process(feed.bytes.data(), feed.bytes.size(), sink);
     });
 
-    // consumer: drain the ring and apply each event to the book.
+    // consumer: drain the ring & apply each event to the book.
     std::uint64_t applied  = 0;
     std::uint64_t rejected = 0;
     std::thread consumer([&] {

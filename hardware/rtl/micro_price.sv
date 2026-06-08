@@ -6,13 +6,13 @@
 //     micro = bid + (ask - bid) * weight,   weight = bid_qty / (bid_qty + ask_qty)
 //
 // which is far friendlier to hardware: `weight` is a proper fraction in [0, 1],
-// so it is produced by the radix-2 fractional divider directly, and the rest is
-// one signed multiply and one add. the result is emitted as Q16.16 fixed point
+// so it is produced by the radix-2 fractional divider directly, & the rest is
+// one signed multiply & one add. the result is emitted as Q16.16 fixed point
 // (16 integer bits of price, 16 fractional bits). prices are expected to be band
 // relative (small), which keeps the Q16.16 result inside 32 bits.
 //
 // latency is FRAC + 3 cycles: FRAC + 1 for the divider, then a multiply stage
-// and an accumulate stage. operand/`valid` alignment is held by a shift-register
+// & an accumulate stage. operand/`valid` alignment is held by a shift-register
 // delay line that matches the divider depth exactly. fully pipelined (one result
 // per clock). synchronous, async active-low reset, non-blocking sequential.
 `default_nettype none
@@ -60,7 +60,7 @@ module micro_price #(
         .quotient   (weight)
     );
 
-    // delay line carrying bid_price and spread alongside the divider so they meet
+    // delay line carrying bid_price & spread alongside the divider so they meet
     // the weight at the multiply stage. index 0 is one cycle deep, index DLY-1 is
     // DLY cycles deep -- the same depth as the divider output.
     logic [PRICE_W-1:0]      bid_dly    [0:DLY-1];
@@ -83,9 +83,9 @@ module micro_price #(
         end
     end
 
-    // stage M (multiply): offset = spread * weight  (Q(.).FRAC), and pre-shift the
+    // stage M (multiply): offset = spread * weight  (Q(.).FRAC), & pre-shift the
     // aligned bid into Q.FRAC so the next stage is a plain add. the product width
-    // is the sum of the operand widths: spread is (PRICE_W+1) bits signed and the
+    // is the sum of the operand widths: spread is (PRICE_W+1) bits signed & the
     // zero-extended weight is (FRAC+1) bits signed.
     localparam int unsigned PROD_W = (PRICE_W + 1) + (FRAC + 1);  // spread * weight
     localparam int unsigned BSH_W  = PRICE_W + FRAC;              // bid << FRAC

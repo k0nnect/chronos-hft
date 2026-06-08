@@ -1,14 +1,14 @@
 // self-checking systemverilog testbench for feature_extractor.
 //
-// streams a batch of directed/pseudo-random book-update beats through the dut and
+// streams a batch of directed/pseudo-random book-update beats through the dut &
 // checks each emitted feature beat against an in-testbench golden model that uses
 // the same integer arithmetic as the rtl (here a plain `/` is fine -- the tb is
 // not synthesized). this is the pure-rtl sanity check; the broader cross-check
-// against the phase-2 market generator and the floating-point order_book lives in
+// against the phase-2 market generator & the floating-point order_book lives in
 // the c++ harness (hardware/tb/cosim_check.cpp).
 //
 // runnable under verilator (`--binary --timing`) or any event simulator. the few
-// timing controls are confined to the tb and fenced from the rtl lint rules.
+// timing controls are confined to the tb & fenced from the rtl lint rules.
 `default_nettype none
 
 module tb_feature_extractor;
@@ -79,7 +79,7 @@ module tb_feature_extractor;
         return neg ? -$signed(ratio[31:0]) : $signed(ratio[31:0]);
     endfunction
 
-    // ---- stimulus and expected vectors ------------------------------------
+    // ---- stimulus & expected vectors ------------------------------------
     logic [31:0] vbid  [0:NVEC-1];
     logic [31:0] vask  [0:NVEC-1];
     logic [31:0] vbq   [0:NVEC-1];

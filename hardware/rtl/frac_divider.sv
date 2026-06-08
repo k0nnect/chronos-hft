@@ -2,14 +2,14 @@
 //
 // computes quotient = floor(numerator * 2^FRAC / denominator) as an unsigned
 // Q0.FRAC value, for the case numerator <= denominator (so the result lies in
-// [0, 1]). this is the exact primitive both the micro-price weight and the
+// [0, 1]). this is the exact primitive both the micro-price weight & the
 // volume-imbalance ratio need.
 //
 // it is a classic non-restoring-style shift/subtract, but unrolled into one
 // pipeline stage per quotient bit: every stage shifts the running remainder up
-// by one, compares against the divisor, conditionally subtracts, and shifts the
+// by one, compares against the divisor, conditionally subtracts, & shifts the
 // resulting bit into the quotient. because every stage is a register, the unit
-// is fully pipelined -- it accepts a new dividend every clock and produces a
+// is fully pipelined -- it accepts a new dividend every clock & produces a
 // result FRAC+1 clocks later. the valid bit rides through the same registers so
 // outputs stay aligned with their inputs. no `/` or `%` is ever inferred.
 //

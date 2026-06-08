@@ -1,19 +1,19 @@
 // the backtest engine: the single hot loop that turns market events into book
-// mutations, simulated fills, strategy decisions and metrics.
+// mutations, simulated fills, strategy decisions & metrics.
 //
-// per event the sequence is deliberate and models real causality:
+// per event the sequence is deliberate & models real causality:
 //   1. resolve the consumption signal from the *pre-mutation* book (an execute /
 //      cancel / delete needs the resting order's price+side before it is gone).
 //   2. apply the event to the book.
 //   3. tick the fill model against the new book; any fills are delivered to the
-//      strategy (on_order_fill) and folded into metrics.
-//   4. hand the strategy the raw event and a fresh top-of-book snapshot; it may
+//      strategy (on_order_fill) & folded into metrics.
+//   4. hand the strategy the raw event & a fresh top-of-book snapshot; it may
 //      stage new orders / cancels via the gateway.
 //   5. mark metrics to the new fair value.
 //   6. drain the staged intents into the fill model (stamped with this event's
 //      time, so their tick-to-trade latency starts now).
 //
-// templated on the concrete book and strategy types: no virtual dispatch anywhere
+// templated on the concrete book & strategy types: no virtual dispatch anywhere
 // on this path. nothing here allocates or throws.
 #pragma once
 
@@ -50,11 +50,11 @@ public:
 
         apply_event(*book_, ev);
 
-        // fills produced by this event reach the strategy and metrics first.
+        // fills produced by this event reach the strategy & metrics first.
         fm_->on_event(now, sig, *book_,
                       [this](const fill_event& f) noexcept { deliver_fill(f); });
 
-        // strategy reacts to the raw event and to fresh top of book.
+        // strategy reacts to the raw event & to fresh top of book.
         strat_->handle_market_event(ev);
         if (book_->has_bid() && book_->has_ask()) [[likely]] {
             const book_update u = snapshot(now);
@@ -69,7 +69,7 @@ public:
         ++events_;
     }
 
-    // pull and process every event currently available in an spsc ring; returns
+    // pull & process every event currently available in an spsc ring; returns
     // how many were handled. call repeatedly while the producer is still running.
     template <typename Ring>
     hft_hot std::size_t drain(Ring& ring) noexcept {

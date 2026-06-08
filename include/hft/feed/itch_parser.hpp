@@ -139,14 +139,14 @@ private:
 }
 
 // walks a buffer of [be16 length][body] frames. designed for streaming: a
-// partial trailing frame simply ends iteration, and `consumed()` reports how
+// partial trailing frame simply ends iteration, & `consumed()` reports how
 // many bytes were fully processed so the caller can carry the remainder forward.
 class frame_cursor {
 public:
     frame_cursor(const std::uint8_t* data, std::size_t len) noexcept
         : base_(data), cur_(data), end_(data + len) {}
 
-    // returns the next message body and writes its length to out_len, or nullptr
+    // returns the next message body & writes its length to out_len, or nullptr
     // when the buffer is exhausted or only a partial frame remains.
     [[nodiscard]] hft_hot const std::uint8_t* next(std::uint16_t& out_len) noexcept {
         if (cur_ + frame_header_size > end_) [[unlikely]] {

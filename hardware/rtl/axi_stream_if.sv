@@ -1,9 +1,9 @@
 // axi4-stream interface + the packed beat layouts carried over it.
 //
 // the package defines the two beat formats: the inbound book update (four 32-bit
-// fixed-point fields) and the outbound feature beat (micro-price + imbalance).
-// using packed structs makes the bit layout unambiguous and shared between the
-// rtl, the testbench and the c++ driver (which packs identical words).
+// fixed-point fields) & the outbound feature beat (micro-price + imbalance).
+// using packed structs makes the bit layout unambiguous & shared between the
+// rtl, the testbench & the c++ driver (which packs identical words).
 //
 // the interface itself is a thin, standard axi-stream bundle with master/slave
 // modports. note: the synthesizable top (feature_extractor) exposes *flat* axi
@@ -16,7 +16,7 @@ package hft_axi_pkg;
 
     // ---- inbound: a top-of-book update (128 bits) -------------------------
     // packed struct fields are msb-first, so best_bid_price occupies the low
-    // 32 bits [31:0] and best_ask_qty the high 32 bits [127:96]. the c++ driver
+    // 32 bits [31:0] & best_ask_qty the high 32 bits [127:96]. the c++ driver
     // packs the four little-endian 32-bit words in the same order.
     typedef struct packed {
         logic [31:0] best_ask_qty;    // [127:96]

@@ -1,10 +1,10 @@
 // top-level feature-extraction accelerator.
 //
 // consumes a 128-bit book-update beat on a slave axi-stream, runs the micro-price
-// and volume-imbalance datapaths concurrently (they share the same FRAC + 3 cycle
-// latency by construction), and emits a 64-bit feature beat on a master stream.
+// & volume-imbalance datapaths concurrently (they share the same FRAC + 3 cycle
+// latency by construction), & emits a 64-bit feature beat on a master stream.
 //
-// the two datapaths are independent and equal-latency, so a single valid/last
+// the two datapaths are independent & equal-latency, so a single valid/last
 // delay line of LATENCY stages reproduces the pipeline delay for the stream
 // handshake; the per-datapath out_valid outputs are left for standalone unit
 // testing. the pipeline never stalls, so s_tready is held asserted whenever the

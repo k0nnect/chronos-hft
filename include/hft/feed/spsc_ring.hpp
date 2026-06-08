@@ -1,9 +1,9 @@
 // lock-free single-producer / single-consumer ring buffer.
 //
-// this is the wire between the feed-handler thread and the engine thread. it is
+// this is the wire between the feed-handler thread & the engine thread. it is
 // wait-free for both sides: a push or pop is a relaxed load, one bounds compare,
-// a slot copy and a release store. the head/tail indices live on separate cache
-// lines, and each side keeps a private *cached* copy of the other side's index
+// a slot copy & a release store. the head/tail indices live on separate cache
+// lines, & each side keeps a private *cached* copy of the other side's index
 // so the common case never reads the contended atomic at all -- this is the key
 // trick that keeps the two cores from ping-ponging the cache line that owns the
 // shared counter (the dominant cost in a naive spsc queue).

@@ -1,13 +1,13 @@
 // co-simulation cross-check: synthetic feed -> { verilated rtl, software
-// reference } and assert they agree.
+// reference } & assert they agree.
 //
 // for every two-sided book state produced by replaying the phase-2 generator we
 // compute three things:
 //   1. the rtl output (from the verilated feature_extractor, via FpgaFeatureEngine)
 //   2. the bit-exact software model (feature_reference)
 //   3. the floating-point order_book reference (micro_price / imbalance)
-// and require (1) == (2) exactly (bit-for-bit) and |(2) - (3)| within a tight ulp
-// window. the rtl is pipelined, so outputs are collected in order and matched to
+// & require (1) == (2) exactly (bit-for-bit) & |(2) - (3)| within a tight ulp
+// window. the rtl is pipelined, so outputs are collected in order & matched to
 // the inputs that produced them.
 //
 // exit code is non-zero on any mismatch so it can run as a ctest case.

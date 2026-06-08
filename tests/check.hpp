@@ -1,4 +1,4 @@
-// minimal test harness: a check macro and a tiny runner, no dependencies.
+// minimal test harness: a check macro & a tiny runner, no dependencies.
 #pragma once
 
 #include <cstdio>
@@ -10,7 +10,7 @@ inline int g_failures = 0;
 
 }  // namespace hfttest
 
-// records and reports a failed expectation but keeps going so one run surfaces
+// records & reports a failed expectation but keeps going so one run surfaces
 // every problem at once.
 #define check(cond)                                                            \
     do {                                                                       \

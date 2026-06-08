@@ -2,8 +2,8 @@
 //
 // everything is a running scalar -- no per-trade history vector, nothing to grow
 // on the hot path. position uses signed average-cost accounting (handles adds,
-// reductions, closes and flips); equity is marked each tick; drawdown tracks the
-// running peak; and a welford accumulator gives mean/variance of per-tick equity
+// reductions, closes & flips); equity is marked each tick; drawdown tracks the
+// running peak; & a welford accumulator gives mean/variance of per-tick equity
 // changes for a sharpe estimate without storing the series.
 #pragma once
 
@@ -28,7 +28,7 @@ public:
 
     void configure(const metrics_config& cfg) noexcept { cfg_ = cfg; }
 
-    // fold one execution into position, realized p&l and fees. uses signed
+    // fold one execution into position, realized p&l & fees. uses signed
     // average-cost: building a position updates the average price; reducing or
     // crossing through zero realizes p&l on the closed quantity.
     hft_hot void on_fill(const fill_event& f) noexcept {
@@ -68,7 +68,7 @@ public:
         if (inv > peak_inventory_) peak_inventory_ = inv;
     }
 
-    // mark the book to a reference price (ticks) and roll equity-derived stats.
+    // mark the book to a reference price (ticks) & roll equity-derived stats.
     hft_hot void on_mark(double mark_ticks) noexcept {
         unrealized_ = static_cast<double>(position_) * (mark_ticks - avg_price_) * cfg_.tick_value;
         equity_     = realized_ + unrealized_;

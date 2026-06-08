@@ -1,10 +1,10 @@
 // implementation of the verilated feature_extractor co-simulation wrapper.
 //
 // drives the model with an explicit two-phase clock (clk low/eval, clk
-// high/eval) and packs/unpacks the axi beats exactly as hft_axi_pkg defines
+// high/eval) & packs/unpacks the axi beats exactly as hft_axi_pkg defines
 // them. the inbound 128-bit beat is four little-endian 32-bit words; verilator
 // exposes it as a wide signal indexable word-by-word. the outbound 64-bit beat
-// is a single 64-bit word with micro_price in the low half and imbalance in the
+// is a single 64-bit word with micro_price in the low half & imbalance in the
 // high half.
 #include "hardware/dpi/fpga_dpi.hpp"
 

@@ -1,10 +1,10 @@
 // end-to-end backtest driver for the micro-price market maker.
 //
 // generates a synthetic itch stream, runs it through the phase-2 pipeline
-// (parser -> spsc ring) on a producer thread, and on a consumer thread drains
+// (parser -> spsc ring) on a producer thread, & on a consumer thread drains
 // the ring into the backtest engine, which drives the book, fill model, strategy
-// and metrics. prints the resulting trading statistics. this exercises every
-// phase together with no virtual calls and no hot-path allocation.
+// & metrics. prints the resulting trading statistics. this exercises every
+// phase together with no virtual calls & no hot-path allocation.
 #include <chrono>
 #include <cstdint>
 #include <cstdio>

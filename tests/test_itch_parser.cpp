@@ -1,6 +1,6 @@
-// round-trips every message type through encode -> frame_cursor -> decode and
+// round-trips every message type through encode -> frame_cursor -> decode &
 // checks the normalized fields, plus framing edge cases: multiple frames in one
-// buffer, a truncated trailing frame, and a malformed (bad-type) frame.
+// buffer, a truncated trailing frame, & a malformed (bad-type) frame.
 #include <cstdint>
 #include <vector>
 

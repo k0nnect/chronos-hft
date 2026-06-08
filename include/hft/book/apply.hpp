@@ -1,9 +1,9 @@
 // glue that applies a normalized market_event to an order_book.
 //
 // this is the minimal mapping from feed semantics to book mutations -- the full
-// strategy-aware engine arrives in phase 3. both an execute ('E') and a partial
+// strategy-aware engine arrives in phase 3. both an execute ('E') & a partial
 // cancel ('X') reduce a resting order's quantity, so both map onto the book's
-// execute(), which reduces and removes on exhaustion. trade prints do not touch
+// execute(), which reduces & removes on exhaustion. trade prints do not touch
 // the displayed book. returns false if the underlying book operation was rejected
 // (unknown id, out-of-band price, pool exhausted).
 #pragma once

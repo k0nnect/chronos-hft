@@ -1,7 +1,7 @@
 // bit-exact software model of the feature_extractor datapath.
 //
 // this is the single source of truth for the fixed-point arithmetic: the rtl is
-// written to reproduce it exactly, and the cosimulation asserts
+// written to reproduce it exactly, & the cosimulation asserts
 // rtl_output == feature_reference(...) bit-for-bit. keeping it as a tiny header
 // also lets the numeric design be validated against the floating-point
 // order_book reference without a verilator toolchain present.
@@ -23,7 +23,7 @@ struct feature_fixed {
     std::int32_t  imbalance;    // Q.16 signed
 };
 
-// inputs are band-relative prices (small) and raw quantities, exactly the words
+// inputs are band-relative prices (small) & raw quantities, exactly the words
 // placed on the inbound axi beat. denom must be non-zero (a two-sided book).
 [[nodiscard]] inline feature_fixed compute_features_fixed(std::uint32_t bid_price_rel,
                                                           std::uint32_t ask_price_rel,

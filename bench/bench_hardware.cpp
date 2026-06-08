@@ -3,8 +3,8 @@
 //
 // the software side times order_book::micro_price()/imbalance() over a stream of
 // two-sided states. the hardware side streams the same states through the
-// verilated feature_extractor and reports the structural pipeline figures that
-// characterise the real accelerator: a fixed latency (FRAC + 3 cycles) and a
+// verilated feature_extractor & reports the structural pipeline figures that
+// characterise the real accelerator: a fixed latency (FRAC + 3 cycles) & a
 // throughput of one feature per cycle. (verilator's event simulation is far
 // slower than silicon, so its wall-clock time is not the hardware metric -- the
 // cycle counts are.)

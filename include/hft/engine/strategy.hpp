@@ -8,10 +8,10 @@
 //
 // orders flow back through `order_gateway`, a concrete (non-virtual) object the
 // engine binds into the strategy. submitting an order just appends an intent to
-// a fixed buffer; the engine drains that buffer once per tick and registers the
-// intents with the fill model using the current book and timestamp. this keeps
-// the strategy free of any knowledge of the book/fill-model types and keeps the
-// submission path allocation-free and branch-light.
+// a fixed buffer; the engine drains that buffer once per tick & registers the
+// intents with the fill model using the current book & timestamp. this keeps
+// the strategy free of any knowledge of the book/fill-model types & keeps the
+// submission path allocation-free & branch-light.
 #pragma once
 
 #include <array>
@@ -37,7 +37,7 @@ struct order_intent {
 
 // fixed-capacity, single-threaded staging buffer for the orders a strategy emits
 // while handling one event. the engine owns it, binds it to the strategy, drains
-// it after each tick, and clears it.
+// it after each tick, & clears it.
 template <std::size_t Capacity = 512>
 class basic_order_gateway {
     static_assert(Capacity > 0, "gateway needs capacity");
@@ -89,7 +89,7 @@ public:
     // bound once by the engine before any callback fires.
     void bind(order_gateway& gw) noexcept { gw_ = &gw; }
 
-    // engine-facing dispatchers: static (no vtable) and force-inlined into the
+    // engine-facing dispatchers: static (no vtable) & force-inlined into the
     // engine's hot loop.
     hft_always_inline void handle_market_event(const market_event& ev) noexcept {
         derived().on_market_event(ev);

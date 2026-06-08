@@ -1,5 +1,5 @@
 // exercises the open-addressing order-id -> slot map: insert/find/erase, the
-// duplicate-key guard, tombstone reuse and probe-chain integrity under churn.
+// duplicate-key guard, tombstone reuse & probe-chain integrity under churn.
 #include "check.hpp"
 #include "hft/book/order_index_map.hpp"
 
@@ -21,7 +21,7 @@ void basic_insert_find_erase() {
     check_eq(map.find(3003), 11u);
     check_eq(map.find(4004), invalid_slot);  // absent
 
-    // duplicate insert is rejected and does not change the mapping.
+    // duplicate insert is rejected & does not change the mapping.
     check(!map.insert(1001, 999));
     check_eq(map.find(1001), 5u);
 
@@ -32,7 +32,7 @@ void basic_insert_find_erase() {
 }
 
 void tombstone_reuse_keeps_probe_chain_intact() {
-    // force collisions and deletions, then make sure later lookups still walk
+    // force collisions & deletions, then make sure later lookups still walk
     // past tombstones to find live entries.
     order_index_map<8> map;
     for (order_id_t id = 1; id <= 5; ++id) {
@@ -52,7 +52,7 @@ void tombstone_reuse_keeps_probe_chain_intact() {
 
 void fills_to_capacity() {
     order_index_map<16> map;
-    // load up to capacity; every insert must succeed and be findable.
+    // load up to capacity; every insert must succeed & be findable.
     for (order_id_t id = 1; id <= 16; ++id) {
         check(map.insert(id, static_cast<slot_t>(id)));
     }

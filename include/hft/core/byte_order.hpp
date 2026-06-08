@@ -1,9 +1,9 @@
 // network byte-order (big-endian) load/store helpers.
 //
-// exchange binary protocols (itch/ouch and friends) are big-endian on the wire.
+// exchange binary protocols (itch/ouch & friends) are big-endian on the wire.
 // these helpers do a single unaligned memcpy plus a byteswap that the compiler
 // lowers to one `bswap`/`rev` instruction, so decoding a field is branch-free
-// and never depends on the buffer being aligned. host endianness is resolved at
+// & never depends on the buffer being aligned. host endianness is resolved at
 // compile time via std::endian, so the little-endian path costs nothing on x86.
 #pragma once
 

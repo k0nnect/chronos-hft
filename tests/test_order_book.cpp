@@ -1,6 +1,6 @@
 // behavioural tests for the l3 order book: best-price tracking, fifo priority,
 // partial/full executions, cancels that empty a level, replace semantics, the
-// analytics (spread / mid / micro-price / imbalance) and out-of-band rejection.
+// analytics (spread / mid / micro-price / imbalance) & out-of-band rejection.
 #include <cmath>
 #include <memory>
 
@@ -60,13 +60,13 @@ void fifo_priority_and_partial_then_full_fill() {
     check_eq(book->best_bid_qty(), 600u);      // 300 left on id1 + 300 on id2
     check_eq(book->live_orders(), 2u);
 
-    // finish off id1; id2 remains and the level survives.
+    // finish off id1; id2 remains & the level survives.
     check(book->execute(1, 300));
     check_eq(book->best_bid_qty(), 300u);
     check_eq(book->live_orders(), 1u);
     check_eq(book->best_bid(), kBase + 50);
 
-    // overfill is clamped and removes the order.
+    // overfill is clamped & removes the order.
     check(book->execute(2, 99999));
     check(!book->has_bid());
     check_eq(book->live_orders(), 0u);
@@ -95,7 +95,7 @@ void replace_forfeits_priority_and_can_move_price() {
     auto book = std::make_unique<book_t>(kBase);
     book->add(1, side::bid, kBase + 20, 100);
     book->add(2, side::bid, kBase + 20, 100);
-    // replace id1 up to a new best price with new size and a new id.
+    // replace id1 up to a new best price with new size & a new id.
     check(book->replace(1, 3, kBase + 21, 250));
     check_eq(book->best_bid(), kBase + 21);
     check_eq(book->best_bid_qty(), 250u);
@@ -115,7 +115,7 @@ void micro_price_and_imbalance() {
     // imbalance(1) = (800 - 200) / 1000 = 0.6
     check(approx(book->imbalance(1), 0.6));
 
-    // add depth and check multi-level imbalance.
+    // add depth & check multi-level imbalance.
     book->add(3, side::bid, kBase + 99, 200);   // bid depth now 1000 over 2 levels
     book->add(4, side::ask, kBase + 103, 800);  // ask depth now 1000 over 2 levels
     check(approx(book->imbalance(2), 0.0));     // (1000 - 1000) / 2000

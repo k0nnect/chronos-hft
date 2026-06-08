@@ -32,7 +32,7 @@ flowchart LR
     subgraph engine["phase 3 · backtest engine"]
         direction TB
         APPLY["apply event<br/>+ queue-consumption signal"]
-        FILL["queue-aware fill model<br/>latency · partials · fees"]
+        FILL["queue-aware fill model<br/>latency · partials · fees<br/>+ market impact (temp · perm · adverse selection)"]
         STRAT["crtp strategy<br/>(micro-price market maker)"]
         METRICS["metrics<br/>p&l · drawdown · sharpe"]
         APPLY --> FILL --> STRAT
@@ -66,7 +66,7 @@ flowchart LR
 |------:|-------|-------|
 | 1 | core data structures + software l3 order book | done |
 | 2 | binary feed handler (itch-like) + spsc ring buffer | done |
-| 3 | backtest engine, strategy api, fill simulation | done |
+| 3 | backtest engine, strategy api, fill simulation + market impact | done |
 | 4 | systemverilog feature engine + verilator cosim bridge | done |
 
 ## layout
@@ -79,7 +79,8 @@ include/hft/        public headers (header-only core)
   feed/             wire protocol, zero-copy parser, spsc ring, feed handler,
                     synthetic market generator
   engine/           book-update snapshot, crtp strategy + order gateway,
-                    queue-aware fill model, metrics, backtest engine
+                    queue-aware fill model, fixed-point market-impact model,
+                    metrics, backtest engine
   strategies/       sample strategies (micro-price market maker)
 hardware/           systemverilog accelerator + verilator cosim
   rtl/              frac divider, micro-price, volume-imbalance, feature_extractor,
@@ -155,6 +156,10 @@ allocation.
   the real volume resting ahead of it and only fills once that queue trades out.
   models tick-to-trade latency, partial fills, marketable/market taker sweeps
   across levels, and maker/taker fees (negative maker bp = rebate).
+- **market-impact model** (optional, off by default) — when enabled the fill model
+  stops treating liquidity as free and static: taker sweeps pay temporary slippage,
+  leave a decaying permanent skew on the fair mid, and degrade the queue position of
+  our own resting orders. see below.
 - **metrics engine** — O(1) per update, no trade history: signed average-cost
   realized/unrealized p&l, fees, position, peak inventory, max drawdown, and a
   welford accumulator for a sharpe estimate.
@@ -165,6 +170,38 @@ allocation.
 - **sample strategy** — a micro-price market maker that joins the inside, leans
   on micro-price/imbalance to withdraw from the side about to be run over, and
   respects a hard inventory cap. run `./build/micro_price_mm`.
+
+## market impact
+
+by default the fill model assumes idealized liquidity: a taker pays exactly the
+displayed price at each level and our own flow never moves the market. that flatters
+passive edge and ignores the cost of size. set `fill_config::enable_impact` and the
+model drives a fixed-point impact accumulator (`engine/market_impact.hpp`) that adds
+the three textbook execution-cost channels — all in integer Q.16 arithmetic (the same
+FRAC=16 format as the fpga datapath), so the hot path never touches the fpu:
+
+- **temporary impact** — an immediate, level-depletion-**linear** concession charged
+  per taker child fill: taking a whole displayed level costs `temp_coeff` ticks, half
+  the level costs half that. realized taker prices come out strictly worse than the
+  idealized sweep — the direct cost of crossing with size.
+- **permanent impact** — a **square-root participation law**,
+  `skew += perm_coeff · sqrt(filled / rolling_volume)`, signed by aggressor direction
+  (a buy lifts the fair mid, a sell depresses it). the rolling-volume denominator is an
+  ewma of observed trade size, floored so the law is well-defined from the first tick.
+  each event the accumulated skew is multiplied by a `decay` factor in [0,1), so a
+  single trade's footprint relaxes geometrically — the propagator picture, and the
+  channel through which a large execution shows up as measurable price decay on the
+  marks that follow it.
+- **queue degradation (adverse selection)** — our aggressive flow inflates the
+  `queue_ahead` of our own resting passive orders (scaled by the same sqrt-participation
+  term): a footprint of size signals intent and draws faster liquidity ahead of us, so
+  we wait longer for the favourable fills and are left with the toxic ones.
+
+the math is exact and self-contained: a digit-by-digit integer square root, 128-bit
+intermediate products, and doubles confined to configure time. `test_market_impact`
+pins the fixed-point primitives and proves, against the idealized baseline the same
+code path produces with impact off, that large executions move realized prices,
+decay the mid, degrade passive fills, and lower marked p&l.
 
 ## the hardware accelerator
 

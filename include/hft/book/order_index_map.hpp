@@ -1,6 +1,6 @@
 // open-addressing hash map from exchange order id -> pool slot.
 //
-// linear probing over two parallel power-of-two arrays. keys and values are
+// linear probing over two parallel power-of-two arrays. keys & values are
 // stored separately so a probe walk touches only the dense key array until it
 // finds the match, which is far friendlier to the cache than a node-per-entry
 // std::unordered_map. all memory is reserved up front; nothing allocates on the
@@ -103,7 +103,7 @@ public:
     [[nodiscard]] static constexpr std::size_t capacity() noexcept { return Capacity; }
 
 private:
-    // splitmix64 finaliser: cheap, branch-free, and scrambles the low bits that
+    // splitmix64 finaliser: cheap, branch-free, & scrambles the low bits that
     // linear probing keys off, which sequential exchange ids otherwise lack.
     [[nodiscard]] hft_always_inline static std::size_t index_of(order_id_t x) noexcept {
         x += 0x9E3779B97F4A7C15ull;

@@ -3,14 +3,14 @@
 // the encoders write length-prefixed big-endian frames that the parser decodes,
 // so encode/decode are exact inverses. `generate_feed` runs a small market
 // simulator that keeps a coherent, *uncrossed* limit order book: liquidity joins
-// at and around the touch, aggressors trade through it (emitted as executes),
-// and resting orders are cancelled. the touch random-walks within a price band.
+// at & around the touch, aggressors trade through it (emitted as executes),
+// & resting orders are cancelled. the touch random-walks within a price band.
 // because orders join behind one another in fifo order, a passive order resting
 // at the touch is genuinely filled once the queue ahead of it trades out -- which
 // is what lets a maker strategy earn realistic fills downstream.
 //
 // the generator reports the exact resting-order count the book must hold after
-// replay, and every emitted message references a live order with a valid
+// replay, & every emitted message references a live order with a valid
 // quantity, so applying the stream to an order_book never rejects an operation.
 #pragma once
 
@@ -143,7 +143,7 @@ struct synthetic_feed {
 };
 
 // generate a deterministic, internally-consistent, *uncrossed* market: liquidity
-// at the touch, aggressors trading through it, and cancels. seeded by `seed`.
+// at the touch, aggressors trading through it, & cancels. seeded by `seed`.
 inline synthetic_feed generate_feed(std::size_t message_count, std::uint64_t seed = 0xA5A5A5A5) {
     synthetic_feed feed;
     feed.base_tick = 1'000'000;
@@ -161,7 +161,7 @@ inline synthetic_feed generate_feed(std::size_t message_count, std::uint64_t see
     std::uniform_int_distribution<int>           action(0, 99);
 
     // a price level is a fifo queue of (order id, remaining qty). the maps are
-    // ordered, so the best bid is bids.rbegin() and the best ask is asks.begin().
+    // ordered, so the best bid is bids.rbegin() & the best ask is asks.begin().
     using level = std::deque<std::pair<order_id_t, qty_t>>;
     std::map<price_t, level> bids;
     std::map<price_t, level> asks;

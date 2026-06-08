@@ -4,14 +4,14 @@
 // ------
 // * prices are integer ticks. each side owns a flat, directly-indexed array of
 //   price_level records covering a fixed band [base_tick, base_tick + NumTicks).
-//   tick -> level is a single subtraction and a bounds check, so locating a
-//   level is O(1) with no hashing and no tree walk.
-// * resting orders live in a single object_pool and are threaded into per-level
+//   tick -> level is a single subtraction & a bounds check, so locating a
+//   level is O(1) with no hashing & no tree walk.
+// * resting orders live in a single object_pool & are threaded into per-level
 //   fifo queues via intrusive prev/next indices, preserving exchange time
 //   priority. add / cancel / execute are all O(1).
 // * order id -> pool slot goes through an open-addressing flat map (see
-//   order_index_map) so cancels and executes, which arrive by id, are O(1) too.
-// * best-bid / best-ask are cached as integer indices and only re-scanned when
+//   order_index_map) so cancels & executes, which arrive by id, are O(1) too.
+// * best-bid / best-ask are cached as integer indices & only re-scanned when
 //   the current best level empties. the scan walks the contiguous level array,
 //   which is the cheapest possible memory access pattern.
 //
@@ -51,7 +51,7 @@ class order_book {
 
 public:
     // base_tick is the lowest price (in ticks) the band can represent. choose it
-    // and NumTicks so the instrument's traded range sits comfortably inside.
+    // & NumTicks so the instrument's traded range sits comfortably inside.
     explicit order_book(price_t base_tick)
         : base_tick_(base_tick),
           bid_levels_(std::make_unique<price_level[]>(NumTicks)),
@@ -113,7 +113,7 @@ public:
     }
 
     // apply an execution against a resting order (an itch-style execute message
-    // carries the order id and the executed quantity). partial fills keep the
+    // carries the order id & the executed quantity). partial fills keep the
     // order at the front of its queue; a full fill removes it. returns false if
     // the id is unknown. exec_qty is clamped to the remaining open quantity.
     hft_hot bool execute(order_id_t id, qty_t exec_qty) noexcept {
@@ -132,7 +132,7 @@ public:
         return true;
     }
 
-    // cancel/replace: an order id can change price and/or quantity. modelled as
+    // cancel/replace: an order id can change price &/or quantity. modelled as
     // remove-then-insert because any price change forfeits time priority, which
     // is exactly what real exchanges do. returns false if old_id is unknown or
     // the replacement cannot be placed (in which case the old order is gone, as
@@ -160,7 +160,7 @@ public:
         best_ask_idx_ = -1;
     }
 
-    // ---- top-of-book and analytics (read only) ----------------------------
+    // ---- top-of-book & analytics (read only) ----------------------------
 
     [[nodiscard]] bool has_bid() const noexcept { return best_bid_idx_ >= 0; }
     [[nodiscard]] bool has_ask() const noexcept { return best_ask_idx_ >= 0; }
@@ -231,7 +231,7 @@ public:
     // ---- read-only queries used by the fill simulator ---------------------
 
     // look up a resting order by id. on success writes its side / price (ticks) /
-    // remaining qty and returns true. used by the engine to resolve the price and
+    // remaining qty & returns true. used by the engine to resolve the price &
     // side of an execute / cancel / delete event *before* it mutates the book, so
     // the fill model can attribute consumed queue volume to the right level.
     [[nodiscard]] hft_hot bool peek_order(order_id_t id, side& s, price_t& price,
@@ -300,8 +300,8 @@ private:
         return s == side::bid ? bid_levels_.get() : ask_levels_.get();
     }
 
-    // unlink one order from its level's fifo queue and free its slot. shared by
-    // cancel, execute (full fill) and replace.
+    // unlink one order from its level's fifo queue & free its slot. shared by
+    // cancel, execute (full fill) & replace.
     hft_always_inline void remove_slot(slot_t slot) noexcept {
         order& o         = pool_[slot];
         const side s     = o.s;
@@ -340,7 +340,7 @@ private:
 
     // the best level on side s just emptied at index idx; re-scan the contiguous
     // level array for the next populated level. only runs when a top level fully
-    // clears, and the walk is over packed memory so it prefetches perfectly.
+    // clears, & the walk is over packed memory so it prefetches perfectly.
     hft_noinline hft_cold void demote_best(side s, std::size_t idx) noexcept {
         if (s == side::bid) {
             if (static_cast<std::int64_t>(idx) != best_bid_idx_) return;
@@ -380,7 +380,7 @@ private:
         return total;
     }
 
-    // hot, frequently-read state kept together and isolated on its own line so
+    // hot, frequently-read state kept together & isolated on its own line so
     // it never false-shares with the larger backing arrays below.
     hft_cache_aligned price_t      base_tick_;
     std::int64_t                   best_bid_idx_ = -1;  // -1 == no bids

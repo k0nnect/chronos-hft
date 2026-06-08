@@ -3,11 +3,11 @@
 // framing follows the soupbintcp/moldudp convention used to carry real itch: a
 // 2-byte big-endian length prefix followed by that many bytes of message body.
 // the first body byte is the message type; the remaining fields are fixed-width
-// and big-endian. the packed structs below are the authoritative description of
+// & big-endian. the packed structs below are the authoritative description of
 // each message's on-wire layout; they exist so the static_asserts pin the byte
 // sizes the encoder/decoder rely on. the decoder never overlays them on the
 // buffer (that would be an aliasing hazard) -- it reads fields sequentially with
-// load_be, which is both alignment-safe and strict-aliasing-safe.
+// load_be, which is both alignment-safe & strict-aliasing-safe.
 #pragma once
 
 #include <cstddef>

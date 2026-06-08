@@ -1,5 +1,5 @@
-// cache-line constants and helpers used to align hot structures and to pad
-// out fields that would otherwise share a line and cause false sharing.
+// cache-line constants & helpers used to align hot structures & to pad
+// out fields that would otherwise share a line & cause false sharing.
 #pragma once
 
 #include <cstddef>
@@ -14,7 +14,7 @@ namespace hft {
 inline constexpr std::size_t cacheline_size = std::hardware_destructive_interference_size;
 #else
 // x86-64 / arm64 line size. fixed at 64 so the value is identical across
-// translation units and matches the alignment baked into the abi here.
+// translation units & matches the alignment baked into the abi here.
 inline constexpr std::size_t cacheline_size = 64;
 #endif
 

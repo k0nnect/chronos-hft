@@ -2,10 +2,10 @@
 //
 // FpgaFeatureEngine presents the rtl accelerator as an ordinary low-latency c++
 // object: push a book update, pop a feature beat. it owns the verilated model,
-// drives its clock, and models the structural pipeline latency so callers can
+// drives its clock, & models the structural pipeline latency so callers can
 // reason about tick-to-feature delay exactly as on real hardware over pcie/axi.
 //
-// the hot methods (push/pop/tick) perform no allocation and do not throw; the
+// the hot methods (push/pop/tick) perform no allocation & do not throw; the
 // only heap use is the verilated model constructed once at startup. this header
 // is only included in the HFT_BUILD_HARDWARE configuration, where the verilator
 // build has generated Vfeature_extractor.h.
@@ -37,7 +37,7 @@ public:
     // hold reset for several cycles to flush the pipeline to a known state.
     void reset() noexcept;
 
-    // present one book update on the inbound stream and advance one clock.
+    // present one book update on the inbound stream & advance one clock.
     // returns the slave tready (true == accepted). does not allocate / throw.
     bool push_book_tick(const book_update& update) noexcept;
 

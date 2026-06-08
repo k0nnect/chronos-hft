@@ -1,5 +1,5 @@
 // phase 2 micro-benchmarks: raw decode throughput, the spsc ring across two
-// threads, and the full feed -> ring -> book pipeline end to end.
+// threads, & the full feed -> ring -> book pipeline end to end.
 #include <chrono>
 #include <cstdint>
 #include <cstdio>

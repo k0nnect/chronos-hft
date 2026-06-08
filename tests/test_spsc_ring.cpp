@@ -1,6 +1,6 @@
-// exercises the spsc ring: empty/full edges, fifo order, wrap-around, and a
+// exercises the spsc ring: empty/full edges, fifo order, wrap-around, & a
 // real two-thread producer/consumer run that checks every item arrives exactly
-// once and in order.
+// once & in order.
 #include <cstdint>
 #include <memory>
 #include <thread>
@@ -34,7 +34,7 @@ void empty_and_full_edges() {
 
 void fifo_order_and_wraparound() {
     spsc_ring<std::uint64_t, 8> ring;
-    // push/pop many times so head/tail run well past capacity and wrap the mask.
+    // push/pop many times so head/tail run well past capacity & wrap the mask.
     std::uint64_t next_push = 0;
     std::uint64_t next_pop  = 0;
     for (int round = 0; round < 1000; ++round) {

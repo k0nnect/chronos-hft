@@ -1,4 +1,4 @@
-// compiler-specific intrinsics, branch hints and inlining controls.
+// compiler-specific intrinsics, branch hints & inlining controls.
 // these are the low-level knobs the hot path relies on; everything here
 // degrades gracefully to a no-op on compilers that do not support it.
 #pragma once

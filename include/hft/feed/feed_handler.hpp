@@ -1,4 +1,4 @@
-// feed handler: drives raw bytes through the frame cursor and decoder, emitting
+// feed handler: drives raw bytes through the frame cursor & decoder, emitting
 // normalized market_events to a sink.
 //
 // the sink is a caller-supplied callable so the handler is decoupled from what
@@ -27,7 +27,7 @@ struct feed_stats {
 
 class feed_handler {
 public:
-    // decode every complete frame in [data, data+len) and pass each decoded
+    // decode every complete frame in [data, data+len) & pass each decoded
     // event to sink(const market_event&). returns the number of bytes fully
     // consumed; any trailing partial frame is left for the caller to re-present.
     template <typename Sink>

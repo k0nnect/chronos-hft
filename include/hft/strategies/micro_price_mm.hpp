@@ -2,15 +2,15 @@
 //
 // the maker posts passive quotes that *join the inside* (best bid / best ask) --
 // that is where executable flow actually lands, so that is where a passive order
-// earns fills and the maker rebate. the micro-price and top-level imbalance form
+// earns fills & the maker rebate. the micro-price & top-level imbalance form
 // a short-horizon "lean" signal: when it points strongly one way the maker pulls
 // its quote on the side that would be run over (don't sell into a rising book,
 // don't buy into a falling one). a hard inventory cap stops it from quoting a
-// side that would breach the position limit, and quotes are only re-sent when
+// side that would breach the position limit, & quotes are only re-sent when
 // something actually changes, so a quiet book produces no cancel/replace churn.
 //
 // derives from strategy<micro_price_mm>: every callback is resolved statically,
-// with no virtual dispatch and no allocation on the path.
+// with no virtual dispatch & no allocation on the path.
 #pragma once
 
 #include <cstdint>
@@ -40,7 +40,7 @@ public:
             return;
         }
 
-        // lean > 0 => upward pressure (fair value above mid and/or bid-heavy book).
+        // lean > 0 => upward pressure (fair value above mid &/or bid-heavy book).
         const double mid  = 0.5 * static_cast<double>(u.best_bid + u.best_ask);
         const double lean = (u.micro_price - mid) + u.imbalance * cfg_.imb_lean;
 
@@ -58,7 +58,7 @@ public:
         requote(u.best_bid, u.best_ask, quote_bid, quote_ask);
     }
 
-    // track our own inventory from fills and force a fresh quote on the filled side.
+    // track our own inventory from fills & force a fresh quote on the filled side.
     hft_hot void on_order_fill(const fill_event& f) noexcept {
         if (f.s == side::bid) {
             net_position_ += static_cast<std::int64_t>(f.qty);

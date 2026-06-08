@@ -1,5 +1,5 @@
-// the two flat records that make up the book: a single resting order and an
-// aggregated price level. both are deliberately trivial, tightly packed and
+// the two flat records that make up the book: a single resting order & an
+// aggregated price level. both are deliberately trivial, tightly packed &
 // 32-bit-handle based so a whole level's worth of bookkeeping fits in one or
 // two cache lines.
 #pragma once
@@ -24,7 +24,7 @@ struct order {
 
 // an aggregated price level: the running totals plus the head/tail of the fifo
 // queue of resting orders. queries that only need depth (imbalance, micro-price)
-// read total_qty directly and never walk the order list.
+// read total_qty directly & never walk the order list.
 struct price_level {
     qty_t         total_qty   = 0;             // sum of open qty across orders
     std::uint32_t order_count = 0;             // number of resting orders

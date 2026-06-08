@@ -1,6 +1,6 @@
 // fundamental fixed-width domain types shared across the whole system.
 // prices are integer ticks (never floating point on the hot path), quantities
-// and identifiers are unsigned, and slot/level handles are 32-bit so two of
+// & identifiers are unsigned, & slot/level handles are 32-bit so two of
 // them pack into a single 64-bit word.
 #pragma once
 

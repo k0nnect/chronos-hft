@@ -1,10 +1,10 @@
 // fixed-capacity object pool with an O(1) intrusive free list.
 //
 // all storage is allocated once, up front, from the heap at construction time
-// and never touched by the allocator again. on the hot path acquire()/release()
+// & never touched by the allocator again. on the hot path acquire()/release()
 // are a single array write plus an index bump, so there is no malloc, no locks
-// and no pointer chasing through freed nodes. handles are dense 32-bit indices
-// rather than pointers, which keeps cross-references half the size and pointer
+// & no pointer chasing through freed nodes. handles are dense 32-bit indices
+// rather than pointers, which keeps cross-references half the size & pointer
 // stable across the lifetime of the pool.
 #pragma once
 
@@ -36,7 +36,7 @@ public:
     object_pool& operator=(object_pool&&)      = default;
 
     // return every slot to the free list. ordered so the first acquire() hands
-    // out slot 0, then 1, ... which keeps early allocations contiguous and warm.
+    // out slot 0, then 1, ... which keeps early allocations contiguous & warm.
     void reset() noexcept {
         for (std::size_t i = 0; i < Capacity; ++i) {
             free_stack_[i] = static_cast<slot_t>(Capacity - 1 - i);

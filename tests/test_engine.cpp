@@ -1,5 +1,5 @@
 // tests for phase 3: the fill model (latency, queue priority, partials, taker
-// sweeps, fees), the metrics engine (average-cost p&l, drawdown, inventory), and
+// sweeps, fees), the metrics engine (average-cost p&l, drawdown, inventory), &
 // a full engine run wiring book + fill model + strategy + metrics together.
 #include <cmath>
 #include <cstdint>
@@ -98,7 +98,7 @@ void latency_gates_activation() {
     fill_collector out;
 
     fm.submit_limit(/*id=*/9, side::bid, kBase + 100, 100, /*now=*/0);  // active at t=10
-    // a trade at our price before activation must not fill (and we are at front,
+    // a trade at our price before activation must not fill (& we are at front,
     // queue learned only on activation).
     fm.on_event(5, fill_signal{true, true, side::bid, kBase + 100, 1000}, *book, out);
     check_eq(out.fills.size(), 0u);
@@ -110,14 +110,14 @@ void latency_gates_activation() {
 }
 
 // a market order sweeps displayed liquidity across levels at activation, paying
-// the taker fee, and drops any unfilled remainder (ioc).
+// the taker fee, & drops any unfilled remainder (ioc).
 void market_order_taker_sweep_and_fees() {
     auto book = make_book();  // asks: 500@102, 400@103
     fill_model<64> fm(fill_config{/*latency=*/0, /*maker=*/-0.20, /*taker=*/0.30, /*tv=*/1.0});
     fill_collector out;
 
     fm.submit_market(/*id=*/42, side::bid, /*qty=*/700, /*now=*/0);
-    fm.on_event(1, fill_signal{}, *book, out);  // activates and sweeps now
+    fm.on_event(1, fill_signal{}, *book, out);  // activates & sweeps now
 
     // 500 at 102 then 200 at 103.
     check_eq(out.fills.size(), 2u);
@@ -189,8 +189,8 @@ void metrics_drawdown() {
     check(approx(m.max_drawdown(), 2000.0));      // peak drawdown is sticky
 }
 
-// full engine: replay a synthetic feed through book+fill+strategy+metrics and
-// sanity-check that it runs, trades, and respects the position cap.
+// full engine: replay a synthetic feed through book+fill+strategy+metrics &
+// sanity-check that it runs, trades, & respects the position cap.
 void full_engine_run_with_market_maker() {
     const itch::synthetic_feed feed = itch::generate_feed(100'000, /*seed=*/7);
     auto book = std::make_unique<book_t>(feed.base_tick);
@@ -215,7 +215,7 @@ void full_engine_run_with_market_maker() {
     check_eq(processed, feed.messages);
     check_eq(engine.events_processed(), feed.messages);
     check(strat.requotes() > 0);          // it actually quoted
-    check(metrics.fills() > 0);           // and got filled
+    check(metrics.fills() > 0);           // & got filled
     // hard inventory cap is respected (allow one in-flight quote of slack).
     check(std::llabs(metrics.position()) <= 1000 + 100);
     check(std::isfinite(metrics.equity()));

@@ -3,12 +3,12 @@
 // imbalance = (bid_qty - ask_qty) / (bid_qty + ask_qty), a signed ratio in
 // [-1, 1]. the magnitude |bid_qty - ask_qty| / (bid_qty + ask_qty) is a proper
 // fraction, so the radix-2 fractional divider produces it directly as Q0.FRAC;
-// the sign is computed up front and re-applied after the divide. the result is
+// the sign is computed up front & re-applied after the divide. the result is
 // emitted as a signed Q.FRAC value (value == imbalance * 2^FRAC).
 //
 // latency is FRAC + 3 cycles, matched to micro_price.sv so the feature_extractor
 // can emit both fields in one aligned beat: FRAC + 1 for the divider, one stage
-// to apply the sign, and one stage to register the sign-extended output. fully
+// to apply the sign, & one stage to register the sign-extended output. fully
 // pipelined, synchronous, async active-low reset, non-blocking sequential.
 `default_nettype none
 

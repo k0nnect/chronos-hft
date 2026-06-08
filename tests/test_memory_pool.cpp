@@ -1,4 +1,4 @@
-// exercises the object pool: acquisition order, exhaustion, and reuse on release.
+// exercises the object pool: acquisition order, exhaustion, & reuse on release.
 #include "check.hpp"
 #include "hft/core/memory_pool.hpp"
 

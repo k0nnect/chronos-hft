@@ -3,7 +3,7 @@
 // the feed handler decodes raw wire messages into this single flat record so the
 // engine never sees protocol details. it is a trivially-copyable pod sized to sit
 // in one cache line, which is exactly what the spsc ring needs to move it between
-// the feed thread and the engine thread with a single aligned store/load.
+// the feed thread & the engine thread with a single aligned store/load.
 #pragma once
 
 #include <cstdint>

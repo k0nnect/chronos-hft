@@ -22,6 +22,7 @@ hft_add_test(test_feed_integration)
 
 # phase 3
 hft_add_test(test_engine)
+hft_add_test(test_market_impact)
 
 # phase 4 -- the fixed-point feature reference the rtl mirrors (no verilator
 # needed; the verilated cosim cross-check lives behind HFT_BUILD_HARDWARE).

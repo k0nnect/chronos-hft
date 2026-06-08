@@ -1,8 +1,8 @@
 // phase 1 demo + micro-benchmark driver for the software order book.
 //
 // builds a book, replays a small hand-built sequence of add / execute / cancel
-// messages, prints the resulting top of book and analytics, then hammers the
-// hot path with a deterministic synthetic workload and reports nanoseconds per
+// messages, prints the resulting top of book & analytics, then hammers the
+// hot path with a deterministic synthetic workload & reports nanoseconds per
 // operation. no real feed yet -- that is phase 2.
 #include <chrono>
 #include <cstdint>
@@ -16,7 +16,7 @@
 namespace {
 
 // a tight band is plenty for a single instrument: 1<<16 ticks ~= 65k price
-// points, and a million resting orders. both arrays are heap-reserved once.
+// points, & a million resting orders. both arrays are heap-reserved once.
 using book_t = hft::order_book</*NumTicks=*/1u << 16, /*MaxOrders=*/1u << 20>;
 
 constexpr hft::price_t kBaseTick = 1'000'000;  // arbitrary tick origin
